@@ -184,7 +184,7 @@ def test_postgres_installed
 end
 
 def test_postgres_updated
-  return true unless ssystem("brew outdated postgres")
+  return true if ssystem("brew outdated postgres")
 
   warn "postgres is outdated. Run `brew upgrade postgres`. (optional)"
 end
