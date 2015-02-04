@@ -207,7 +207,7 @@ def test_postgres_autolauch_setup
 end
 
 def test_postgres_accessible
-  can_use_psql = ssystem('psql -c "\dt"')
+  can_use_psql = ssystem('psql --list')
 
   return true if can_use_psql
 
