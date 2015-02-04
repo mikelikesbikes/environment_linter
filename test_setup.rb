@@ -1,47 +1,16 @@
-require 'fileutils'
-include FileUtils
+require 'date'
 
-require 'pry'
 
-PATH = ENV["PATH"].split(":")
-
-def test(string, &block)
-  @errors = []
-  @warnings = []
-
-  result = block.call
-
-  if result
-    STDOUT.puts "[OK] #{string}"
-  else
-    STDERR.puts "[FAILED] #{string}"
-  end
-
-  print_errors
-  print_warnings
-
-  result
+def system_path
+  @system_path ||= ENV["PATH"].split(":")
 end
 
-def print_errors
-  @errors.each { |e| STDERR.puts "    [ERROR] #{e}" }
-end
-
-def print_warnings
-  @warnings.each { |e| STDERR.puts "    [WARNING] #{e}" }
-end
-
-def error(string)
-  @errors << string
-  false
-end
-
-def warn(string)
-  @warnings << string
-  true
+def osx_version
+  @osx_version ||= %x(sw_vers -productVersion).split(".").slice(0, 2).join(".")
 end
 
 def test_setup
+  test_command_line_tools_setup
   test_sublime_setup
   test_path_setup
   test_homebrew_setup
@@ -50,6 +19,25 @@ def test_setup
   test_ruby_version_manager_setup
   test_ruby_setup
   test_gem_setup
+end
+
+def test_command_line_tools_setup
+  test "Command Line Tools" do
+    test_command_line_tools_installed
+  end
+end
+
+def test_command_line_tools_installed
+  case osx_version
+  when "10.10"
+    return true if ssystem("xcode-select -p")
+  when "10.9"
+    return true if ssystem("pkgutil --pkg-info=com.apple.pkg.CLTools_Executables")
+  when "10.8"
+    return true if ssystem("pkgutil --pkg-info=com.apple.pkg.DeveloperToolsCLI")
+  end
+
+  error "OS X Command Line Tools are not installed. Run `xcode-select --install` and follow the instructions OR open https://developer.apple.com/downloads and search for 'command line tools' for OS X #{OSX_VERSION}."
 end
 
 def test_sublime_setup
@@ -78,9 +66,9 @@ def test_path_setup
 end
 
 def test_path_ordering
-  ulb = PATH.index("/usr/local/bin")
-  ub = PATH.index("/usr/bin")
-  b = PATH.index("/bin")
+  ulb = system_path.index("/usr/local/bin")
+  ub = system_path.index("/usr/bin")
+  b = system_path.index("/bin")
 
   return true if ulb < ub && ulb < b
 
@@ -101,14 +89,9 @@ def test_homebrew_command
   error "brew command is not reachable, install homebrew."
 end
 
-def ssystem(command)
-  system("#{command} &>/dev/null")
-end
-
 def test_homebrew_updated
-  cd %x(brew --repository).chomp
-  head_fresh = Date.parse(%x(git show -s --format=%ci master)) == Date.today
-  return true if head_fresh
+  homebrew_repo_fresh = Date.parse(%x(cd $(brew --repository) && git show -s --format=%ci master).chomp) == Date.today
+  return true if homebrew_repo_fresh
 
   error "brew is outdated, run `brew update`"
 end
@@ -149,13 +132,13 @@ def test_rbenv_command
 end
 
 def test_rbenv_dir_in_path
-  return true if PATH.include?(File.join(%x(rbenv root).chomp, "shims"))
+  return true if system_path.include?(File.join(%x(rbenv root).chomp, "shims"))
 
   error "rbenv shims not in path. Run `rbenv init` and follow the directions."
 end
 
 def test_rbenv_managing_ruby
-  return true unless %x(rbenv version-name) == "system"
+  return true unless %x(rbenv version-name).chomp == "system"
 
   error "rbenv is not managing your ruby. Ensure ruby is installed by rbenv and set global ruby."
 end
@@ -245,7 +228,7 @@ def test_sqlite3_installed
 end
 
 def test_sqlite3_trace_available
-  trace_command_accessible = ssystem('sqlite3 temp.db ".trace off"')
+  trace_command_accessible = ssystem('sqlite3 /tmp/temp.db ".trace off"')
 
   return true if trace_command_accessible
   error "sqlite3 is not up to date. If Homebrew is ok, then `brew install sqlite3`."
@@ -261,7 +244,7 @@ end
 
 RUBY_VERSIONS = %w(2.0.0 2.1.0 2.1.1 2.1.2 2.1.3 2.1.4 2.1.5 2.2.0)
 def test_ruby_version
-  ruby_version = %x(ruby -v | cut -d ' ' -f 2).split("p").first
+  ruby_version = %x(ruby -v | cut -d ' ' -f 2).chomp.split("p").first
 
   return true if RUBY_VERSIONS.include?(ruby_version)
 
@@ -307,26 +290,73 @@ def test_gem_bundle_command_location
   error "bundler is not installed in the correct location. If Ruby is ok, then run `gem install bundler`."
 end
 
+def gem_installed?(gem_name)
+  @gem_list ||= %x(gem list -l --no-version).split("\n")
+  @gem_list.include?(gem_name)
+end
+
 def test_gem_nokogiri
-  return true if ssystem("gem list --no-version | grep nokogiri")
+  return true if gem_installed?("nokogiri")
 
   error "nokogiri is not installed. If Ruby is ok, then run `gem install nokogiri`."
 end
 
 def test_gem_pg
-  return true if ssystem("gem list --no-version | grep pg")
+  return true if gem_installed?("pg")
 
   error "pg is not installed. If Ruby and Postgres are ok, then run `gem install pg`."
 end
 
 def test_gem_sqlite3
-  return true if ssystem("gem list --no-version | grep sqlite3")
+  return true if gem_installed?("sqlite3")
 
   error "sqlite3 is not installed. If Ruby and SQLite3 are ok, then run `gem install sqlite3`."
 end
 
 def test_gem_rspec
+  return true if gem_installed?("rspec")
+
+  error "rspec is not installed. If Ruby and SQLite3 are ok, then run `gem install rspec`."
+end
+
+def test(string, &block)
+  @errors = []
+  @warnings = []
+
+  result = block.call
+
+  if result
+    STDOUT.puts "[OK] #{string}"
+  else
+    STDERR.puts "[FAILED] #{string}"
+  end
+
+  print_errors
+  print_warnings
+
+  result
+end
+
+def print_errors
+  @errors.each { |e| STDERR.puts "    [ERROR] #{e}" }
+end
+
+def print_warnings
+  @warnings.each { |e| STDERR.puts "    [WARNING] #{e}" }
+end
+
+def error(string)
+  @errors << string
+  false
+end
+
+def warn(string)
+  @warnings << string
   true
+end
+
+def ssystem(command)
+  system("#{command} &>/dev/null")
 end
 
 #test_rbenv_setup
