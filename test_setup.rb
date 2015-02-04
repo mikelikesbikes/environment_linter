@@ -121,7 +121,8 @@ def test_rbenv_setup
     test_rbenv_dir_in_path &&
     test_rbenv_managing_ruby &&
     test_ruby_build_installed &&
-    test_ruby_build_updated
+    test_ruby_build_updated &&
+    test_rbenv_gem_rehash_installed
   end
 end
 
