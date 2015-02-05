@@ -37,7 +37,7 @@ def test_command_line_tools_installed
     return true if ssystem("pkgutil --pkg-info=com.apple.pkg.DeveloperToolsCLI")
   end
 
-  error "OS X Command Line Tools are not installed. Run `xcode-select --install` and follow the instructions OR open https://developer.apple.com/downloads and search for 'command line tools' for OS X #{OSX_VERSION}."
+  error "OS X Command Line Tools are not installed. Run `xcode-select --install` and follow the instructions OR open https://developer.apple.com/downloads and search for 'command line tools' for OS X #{osx_version}."
 end
 
 def test_sublime_setup
