@@ -237,10 +237,18 @@ end
 
 def test_ruby_setup
   test "Ruby" do
+    test_ruby_isnt_system &&
     test_ruby_version &&
     test_rubygems_location
-    # test that bundler is installed
   end
+end
+
+def test_ruby_isnt_system
+  ruby_is_system = %x(which ruby).chomp == "/usr/bin/ruby"
+
+  return true unless ruby_is_system
+
+  error "ruby is not managed by a ruby version manager. Install rbenv, then run `rbenv install 2.2.0`."
 end
 
 RUBY_VERSIONS = %w(2.0.0 2.1.0 2.1.1 2.1.2 2.1.3 2.1.4 2.1.5 2.2.0)
