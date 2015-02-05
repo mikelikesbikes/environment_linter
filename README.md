@@ -5,6 +5,8 @@ development with Ruby. It assumes OS X 10.8 or newer.
 
 ## Usage:
 
+At the terminal run:
+
 ```sh
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/mikelikesbikes/environment_linter/master/test_setup.rb)"
 ```
