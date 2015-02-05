@@ -191,7 +191,7 @@ def test_postgres_updated
 end
 
 def test_postgres_running
-  postgres_process_found = ssystem("ps ax | grep `brew --prefix postgres`")
+  postgres_process_found = ssystem("ps ax | grep postgres | grep -v grep")
 
   return true if postgres_process_found
 
