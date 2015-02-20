@@ -171,7 +171,6 @@ end
 def test_postgres_setup
   test "Postgres" do
     test_postgres_installed &&
-    test_postgres_updated &&
     test_postgres_running &&
     test_postgres_autolauch_setup &&
     test_postgres_accessible
