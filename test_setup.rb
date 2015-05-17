@@ -242,16 +242,16 @@ def test_ruby_setup
   end
 end
 
+LATEST_RUBY_VERSION = %x(curl -sSL http://ruby.thoughtbot.com/latest)
+
 def test_ruby_isnt_system
   ruby_is_system = %x(which ruby).chomp == "/usr/bin/ruby"
 
   return true unless ruby_is_system
 
-  error "ruby is not managed by a ruby version manager. Install rbenv, then run `rbenv install 2.2.0`."
+  error "ruby is not managed by a ruby version manager. Install rbenv, then run `rbenv install #{LATEST_RUBY_VERSION}`."
 end
 
-RUBY_VERSIONS = %w(2.0.0 2.1.0 2.1.1 2.1.2 2.1.3 2.1.4 2.1.5 2.2.0)
-LATEST_RUBY_VERSION = %x(curl -sSL http://ruby.thoughtbot.com/latest)
 def test_ruby_version
   return unless ruby_version_manager
   
@@ -262,7 +262,7 @@ def test_ruby_version
                      end
   
   return true if latest_installed == LATEST_RUBY_VERSION
-  
+
   error "A newer stable version of Ruby is available. Install rbenv, then run `rbenv install #{LATEST_RUBY_VERSION}`."
 end
 
