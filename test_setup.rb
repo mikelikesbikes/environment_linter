@@ -96,40 +96,40 @@ def test_homebrew_updated
   error "brew is outdated, run `brew update`"
 end
 
-def ruby_version_manager
-  if ssystem("which rbenv")
-    :rbenv
-  elsif ssystem("which rvm")
-    :rvm
-  else
-    nil
-  end
+def rbenv_present?
+  ssystem("which rbenv")
+end
+
+def rvm_present?
+  ssystem("which rvm")
 end
 
 def test_ruby_version_manager_setup
-  case ruby_version_manager
-  when :rbenv then return test_rbenv_setup
-  when :rvm   then return test_rvm_setup
+  if rbenv_present? && rvm_present?
+    test "Ruby Version Manager" do
+      error "both rvm and rbenv were found. Please uninstall one of them (e.g. rvm implode)."
+      false
+    end
+  elsif rbenv_present?
+    test_rbenv_setup
+  elsif rvm_present?
+    test_rvm_setup
+  else
+    test "Ruby Version Manager" do
+      error "ruby version manager not found, install rbenv."
+      false
+    end
   end
-
-  error "ruby version manager not found, install rbenv."
 end
 
 def test_rbenv_setup
   test "Rbenv" do
-    test_rbenv_command &&
     test_rbenv_dir_in_path &&
     test_rbenv_managing_ruby &&
     test_ruby_build_installed &&
     test_ruby_build_updated &&
     test_rbenv_gem_rehash_installed
   end
-end
-
-def test_rbenv_command
-  return true if ssystem("which rbenv")
-
-  error "rbenv not found. Run `brew install rbenv`."
 end
 
 def test_rbenv_dir_in_path
@@ -162,10 +162,23 @@ def test_rbenv_gem_rehash_installed
   warn "rbenv-gem-rehash is not installed. Run `brew install rbenv-gem-rehash`. (optional)"
 end
 
-def test_rvm
+def test_rvm_setup
   test "RVM" do
-    true
+    test_rvm_dir_in_path &&
+    test_rvm_managing_ruby
   end
+end
+
+def test_rvm_dir_in_path
+  return true if system_path.include?(File.expand_path("~/.rvm/bin"))
+
+  error "rvm's bin is not in path."
+end
+
+def test_rvm_managing_ruby
+  return true if %x(which ruby).index(File.expand_path("~/.rvm")) == 0
+
+  error "rvm is not managing your ruby. Ensure that rvm is setup to use a version of ruby it is managing."
 end
 
 def test_postgres_setup
@@ -250,13 +263,13 @@ def test_ruby_isnt_system
   error "ruby is not managed by a ruby version manager. Install rbenv, then run `rbenv install 2.2.0`."
 end
 
-RUBY_VERSIONS = %w(2.0.0 2.1.0 2.1.1 2.1.2 2.1.3 2.1.4 2.1.5 2.2.0)
+RUBY_VERSIONS = %w(2.0.0 2.1.0 2.1.1 2.1.2 2.1.3 2.1.4 2.1.5 2.2.0 2.2.1)
 def test_ruby_version
   ruby_version = %x(ruby -v | cut -d ' ' -f 2).chomp.split("p").first
 
   return true if RUBY_VERSIONS.include?(ruby_version)
 
-  error "ruby is out of date (current running #{ruby_version}). Install rbenv, then run `rbenv install 2.2.0`."
+  error "ruby is out of date (current running #{ruby_version}). Use your Ruby Version Manager to install a newer version of ruby."
 end
 
 def test_rubygems_location
