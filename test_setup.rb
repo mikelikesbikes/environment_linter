@@ -91,8 +91,9 @@ def test_homebrew_command
 end
 
 def test_homebrew_updated
-  homebrew_repo_fresh = Date.parse(%x(cd $(brew --repository) && git show -s --format=%ci master).chomp) == Date.today
-  return true if homebrew_repo_fresh
+  brew_last_updated_on = DateTime.parse(%x(cd $(brew --repository) && git show -s --format=%ci master).chomp).new_offset(0)
+  yesterday = DateTime.now.new_offset(0).prev_day
+  return true if brew_last_updated_on > yesterday
 
   error "brew is outdated, run `brew update`"
 end
