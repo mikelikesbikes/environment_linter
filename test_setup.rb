@@ -1,12 +1,11 @@
 require 'date'
 
-
 def system_path
   @system_path ||= ENV["PATH"].split(":")
 end
 
 def osx_version
-  @osx_version ||= %x(sw_vers -productVersion).split(".").slice(0, 2).join(".")
+  @osx_version ||= %x(sw_vers -productVersion).split(".").slice(0, 2).join(".").chomp
 end
 
 def test_setup
@@ -29,6 +28,8 @@ end
 
 def test_command_line_tools_installed
   case osx_version
+  when "10.11"
+    return true if ssystem("xcode-select -p")
   when "10.10"
     return true if ssystem("xcode-select -p")
   when "10.9"
