@@ -130,6 +130,7 @@ def test_rbenv_setup
     test_rbenv_managing_ruby &&
     test_ruby_build_installed &&
     test_ruby_build_updated &&
+    test_rbenv_default_gems
   end
 end
 
@@ -157,7 +158,11 @@ def test_ruby_build_updated
   error "ruby-build is out of date. Run `brew upgrade ruby-build`."
 end
 
+def test_rbenv_default_gems
+  return true if ssystem("ls -d $(rbenv root)/plugins/*/ | grep rbenv-default-gems")
 
+  warn "rbenv-default-gems is not installed. Follow the directions here: https://github.com/rbenv/rbenv-default-gems. (optional)"
+end
 
 def test_rvm_setup
   test "RVM" do
