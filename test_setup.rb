@@ -272,13 +272,15 @@ def test_ruby_isnt_system
   error "ruby is not managed by a ruby version manager. Install rbenv, then run `rbenv install 2.2.0`."
 end
 
-RUBY_VERSIONS = %w(2.0.0 2.1.0 2.1.1 2.1.2 2.1.3 2.1.4 2.1.5 2.2.0 2.2.1)
+
+RUBY_MIN_VERSION = "2.1"
 def test_ruby_version
-  ruby_version = %x(ruby -v | cut -d ' ' -f 2).chomp.split("p").first
+  required_ruby = RubyVersion.from_string(RUBY_MIN_VERSION)
+  current_ruby = RubyVersion.from_string(%x(ruby -v | cut -d ' ' -f 2).chomp)
 
-  return true if RUBY_VERSIONS.include?(ruby_version)
+  return true if current_ruby >= required_ruby
 
-  error "ruby is out of date (current running #{ruby_version}). Use your Ruby Version Manager to install a newer version of ruby."
+  error "ruby is out of date (current running #{current_ruby}). Use your Ruby Version Manager to install #{required_ruby} or newer."
 end
 
 def test_rubygems_location
@@ -389,5 +391,43 @@ def ssystem(command)
   system("#{command} &>/dev/null")
 end
 
-#test_rbenv_setup
+class RubyVersion
+  def initialize(major, minor = nil, teeny = nil, patch = nil)
+    @major = major
+    @minor = minor
+    @teeny = teeny
+    @patch = patch
+  end
+
+  def self.from_string(str)
+    new(*str.split(/[.p]/).map(&:to_i))
+  end
+
+  def <=>(other)
+    self.to_a <=> other.to_a
+  end
+
+  def >=(other)
+    (self <=> other) >= 0
+  end
+
+  def to_a
+    [@major, @minor || 0, @teeny || 0, @patch || 0]
+  end
+
+  def to_s
+    version_string = "#{@major}"
+    if @minor
+      version_string << ".#{@minor}"
+      if @teeny
+        version_string << ".#{@teeny}"
+        if @patch
+          version_string << "p#{@patch}"
+        end
+      end
+    end
+    version_string
+  end
+end
+
 test_setup
