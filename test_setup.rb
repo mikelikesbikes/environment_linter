@@ -130,7 +130,8 @@ def test_rbenv_setup
     test_rbenv_managing_ruby &&
     test_ruby_build_installed &&
     test_ruby_build_updated &&
-    test_rbenv_default_gems
+    test_rbenv_default_gems &&
+    test_rbenv_bundler_ruby_version
   end
 end
 
@@ -162,6 +163,12 @@ def test_rbenv_default_gems
   return true if ssystem("ls -d $(rbenv root)/plugins/*/ | grep rbenv-default-gems")
 
   warn "rbenv-default-gems is not installed. Follow the directions here: https://github.com/rbenv/rbenv-default-gems. (optional)"
+end
+
+def test_rbenv_bundler_ruby_version
+  return true if ssystem("ls -d $(rbenv root)/plugins/*/ | grep rbenv-bundler-ruby-version")
+
+  warn "rbenv-bunlder-ruby-version is not installed. Follow the directions here: https://github.com/aripollak/rbenv-bundler-ruby-version. (optional)"
 end
 
 def test_rvm_setup
