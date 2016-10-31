@@ -28,17 +28,15 @@ end
 
 def test_command_line_tools_installed
   case osx_version
-  when "10.11"
-    return true if ssystem("xcode-select -p")
-  when "10.10"
-    return true if ssystem("xcode-select -p")
   when "10.9"
     return true if ssystem("pkgutil --pkg-info=com.apple.pkg.CLTools_Executables")
   when "10.8"
     return true if ssystem("pkgutil --pkg-info=com.apple.pkg.DeveloperToolsCLI")
+  else
+    return true if ssystem("xcode-select -p")
   end
 
-  error "OS X Command Line Tools are not installed. Run `xcode-select --install` and follow the instructions OR open https://developer.apple.com/downloads and search for 'command line tools' for OS X #{osx_version}."
+  error "OS X Command Line Tools are not installed. Install 'command line tools' for OS X #{osx_version}."
 end
 
 def test_sublime_setup
