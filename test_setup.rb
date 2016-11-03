@@ -89,9 +89,17 @@ def test_homebrew_command
 end
 
 def test_homebrew_updated
-  brew_last_updated_on = DateTime.parse(%x(cd $(brew --repository) && git show -s --format=%ci master).chomp).new_offset(0)
-  yesterday = DateTime.now.new_offset(0).prev_day
-  return true if brew_last_updated_on > yesterday
+  # brew update does some fun stuff internally, so the local "stable" branch
+  # doesn't have an upstream set. Instead it uses tags that match a particular
+  # pattern. Here's the original source:
+  # https://github.com/Homebrew/brew/blob/d4311fd49fe298513d71b269763f33e4f8069ba3/Library/Homebrew/cmd/update.sh#L220-L222
+  tag_name = %x(cd $(brew --repository) &&
+           git tag --list |
+           sort --field-separator=. --key=1,1nr -k 2,2nr -k 3,3nr |
+           grep --max-count=1 '^[0-9]*\.[0-9]*\.[0-9]*$')
+  head, tag_head = %x(cd $(brew --repository) && git fetch &&
+                      git rev-parse HEAD #{tag_name}).split("\n")
+  return true if head == tag_head
 
   error "brew is outdated, run `brew update`"
 end
