@@ -323,8 +323,6 @@ def test_gem_bundle_command_location
   ruby_location = File.dirname(%x(which ruby))
   bundle_location = File.dirname(%x(which bundle))
 
-  system_path
-
   return true if system_path.include?(ruby_location) && system_path.include?(bundle_location)
 
   error "bundler is not installed in the correct location. If Ruby is ok, then run `gem install bundler`."
