@@ -279,7 +279,7 @@ def test_ruby_isnt_system
 end
 
 
-RUBY_MIN_VERSION = "2.1"
+RUBY_MIN_VERSION = "2.2.2"
 def test_ruby_version
   required_ruby = RubyVersion.from_string(RUBY_MIN_VERSION)
   current_ruby = RubyVersion.from_string(%x(ruby -v | cut -d ' ' -f 2).chomp)
